@@ -22,10 +22,11 @@ const {username, password} = req.body;
 try{
     const hashedpw = await bcrypt.hash(password, 10);
     const createdUser = await User.create({username, password: hashedpw});
-    res.status(201).json(createdUser);
+    const userCreatedMessage = `successfully created user ${createdUser.username}`
+    res.status(200).send(userCreatedMessage);
   } catch(err){
     console.log(err);
-    res.status(500).json({ message: 'Failed to create user.' });
+    res.status(500).json({ message: 'incorrect username or password' });
   }
 })
 
@@ -36,21 +37,24 @@ app.post("/login", async(req, res, Next) => {
     const { username, password } = req.body;
     const foundUser = await User.findOne({where: {username}});
     if(!foundUser){
-      res.status(400).send("Failed login");
+      res.status(400).send("incorrect username or password");
       return;
     }
+    const loginMessage = `successfully logged in user ${foundUser.username}`
     const isMatch = await bcrypt.compare(password, foundUser.password);
 
     if(isMatch){
-      res.status(400).send("Failed login");
+      res.status(200).send(loginMessage);
     }
-    res.send("Success")
+    if(!isMatch){
+      const notMatched = `incorrect username or password`
+      res.status(401).send(notMatched);
+    }
     
   } catch(err){
-    console.error(err)
-    res.status(500).json({ message: 'Failed to log in.' });
+    const msg = `incorrect username or password`
+    res.status(401).send(msg);
   }
-  res.send("Success");
 })
 
 // we export the app, not listening in here, so that we can run tests
